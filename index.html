@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONTROL DE CLIENTES </title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Sección de inicio de sesión -->
+    <section id="login-section">
+        <h2>INICIAR SESIÓN</h2>
+        <form id="login-form">
+            <input type="text" id="username" placeholder="Usuario" required>
+            <input type="password" id="password" placeholder="Contraseña" required>
+            <button type="submit">Iniciar Sesión</button>
+            <p id="login-error" class="hidden">Usuario o contraseña incorrectos.</p>
+        </form>
+    </section>
+
+    <!-- Panel de control -->
+    <section id="control-panel" class="hidden">
+        <button id="btn-enter-client">INGRESAR CLIENTES</button>
+        <button id="btn-view-scheduled">VER AGENDADOS</button>
+        <button id="btn-logout">Cerrar Sesión</button>
+    </section>
+
+    <!-- Ingreso de cliente -->
+    <section id="enter-client-section" class="hidden">
+        <h2>Ingresar Cliente</h2>
+        <form id="client-form">
+            <label for="name">Nombres Completos:</label>
+            <input type="text" id="name" required>
+
+            <label for="doc-type">Tipo de Documento:</label>
+            <select id="doc-type" required>
+                <option value="DNI">DNI</option>
+                <option value="CE">CE</option>
+                <option value="RUC">RUC</option>
+            </select>
+
+            <label for="doc-number">Número de Documento:</label>
+            <input type="text" id="doc-number" required>
+
+            <label for="address">Dirección Completa:</label>
+            <input type="text" id="address" required>
+
+            <label for="district">Distrito:</label>
+            <input type="text" id="district" required>
+
+            <label for="phone">Teléfono:</label>
+            <input type="tel" id="phone" required>
+
+            <label for="email">Correo:</label>
+            <input type="email" id="email" required>
+
+            <label for="plan">Plan:</label>
+            <input type="text" id="plan" required>
+
+            <label for="crm-status">Último Estado de CRM:</label>
+            <input type="datetime-local" id="crm-status" required>
+
+            <label for="release-time">Horario de Liberación:</label>
+            <input type="datetime-local" id="release-time" readonly>
+
+            <label for="observations">Observaciones:</label>
+            <textarea id="observations"></textarea>
+
+            <label for="order-status">Estado de Pedido:</label>
+            <select id="order-status" required>
+                <option value="PENDIENTE">PENDIENTE</option>
+                <option value="NO VENTA">NO VENTA</option>
+                <option value="VENTA">VENTA</option>
+            </select>
+
+            <button type="submit">Guardar</button>
+            <button id="btn-back">Volver</button>
+        </form>
+    </section>
+
+    <!-- Ver Agendados -->
+    <section id="view-scheduled-section" class="hidden">
+        <h2>Clientes Agendados</h2>
+        <div id="client-list"></div>
+        <button id="btn-back-view">Volver</button>
+    </section>
+
+    <!-- Detalle del cliente -->
+    <section id="client-detail-section" class="hidden">
+        <h2>Detalle del Cliente</h2>
+        <div id="client-details"></div>
+        <button id="btn-back-detail">Volver</button>
+    </section>
+
+    <script src="app.js"></script>
+</body>
+</html>
