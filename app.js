@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentUser = null;
     let editIndex = null; // Índice del cliente a editar
-    const clients = [];
+    let clients = JSON.parse(localStorage.getItem('clients')) || []; // Carga los clientes desde localStorage
 
     // Elementos del DOM
     const loginSection = document.getElementById('login-section');
@@ -53,11 +53,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const saveClientData = (data) => {
+        let clients = JSON.parse(localStorage.getItem('clients')) || [];
         if (editIndex !== null) {
             clients[editIndex] = data; // Actualiza cliente existente
         } else {
             clients.push(data); // Agrega nuevo cliente
         }
+        localStorage.setItem('clients', JSON.stringify(clients)); // Guarda en localStorage
         editIndex = null; // Resetea índice de edición
         updateClientList();
     };
@@ -130,7 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.deleteClient = (index) => {
+        clients = JSON.parse(localStorage.getItem('clients')) || [];
         clients.splice(index, 1);
+        localStorage.setItem('clients', JSON.stringify(clients)); // Guarda los datos actualizados en localStorage
         updateClientList();
     };
 
@@ -161,52 +165,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = document.getElementById('email').value;
         const plan = document.getElementById('plan').value;
         const crmStatus = document.getElementById('crm-status').value;
-        const releaseTime = calculateReleaseTime(crmStatus);
+        const releaseTime = calculateReleaseTime(new Date().toISOString());
         const observations = document.getElementById('observations').value;
         const orderStatus = document.getElementById('order-status').value;
 
-        if (!checkDuplicateDocument(docNumber) || (editIndex !== null && clients[editIndex].docNumber === docNumber)) {
-            const clientData = {
-                name,
-                docType,
-                docNumber,
-                address,
-                district,
-                phone,
-                email,
-                plan,
-                crmStatus,
-                releaseTime,
-                observations,
-                orderStatus
-            };
-            saveClientData(clientData);
-            clientForm.reset();
-            hideSection(enterClientSection);
-            showSection(controlPanel);
-        } else {
-            alert('Número de documento ya registrado.');
+        if (checkDuplicateDocument(docNumber)) {
+            alert('El número de documento ya existe en la base de datos. Intente con otro número.');
+            return;
         }
+
+        const clientData = { name, docType, docNumber, address, district, phone, email, plan, crmStatus, releaseTime, observations, orderStatus };
+        saveClientData(clientData);
+        hideSection(enterClientSection);
+        showSection(viewScheduledSection);
     });
 
     btnEnterClient.addEventListener('click', () => {
+        hideSection(viewScheduledSection);
         showSection(enterClientSection);
     });
 
     btnViewScheduled.addEventListener('click', () => {
-        updateClientList();
+        hideSection(controlPanel);
         showSection(viewScheduledSection);
     });
 
-    btnLogout.addEventListener('click', () => {
-        currentUser = null;
-        showSection(loginSection);
-    });
-
     btnBack.addEventListener('click', () => {
-        clientForm.reset();
         hideSection(enterClientSection);
-        showSection(controlPanel);
+        showSection(viewScheduledSection);
     });
 
     btnBackView.addEventListener('click', () => {
@@ -217,5 +203,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btnBackDetail.addEventListener('click', () => {
         hideSection(clientDetailSection);
         showSection(viewScheduledSection);
+    });
+
+    btnLogout.addEventListener('click', () => {
+        currentUser = null;
+        loginSection.classList.remove('hidden');
+        controlPanel.classList.add('hidden');
     });
 });
