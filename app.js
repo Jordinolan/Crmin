@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentUser = null;
     let editIndex = null; // Índice del cliente a editar
-    let clients = JSON.parse(localStorage.getItem('clients')) || []; // Carga los clientes desde localStorage
+    let clients = []; // Inicialmente vacío, se cargará desde la API
 
     // Elementos del DOM
     const loginSection = document.getElementById('login-section');
@@ -52,41 +52,59 @@ document.addEventListener('DOMContentLoaded', () => {
         return clients.some(client => client.docNumber === docNumber && client !== clients[editIndex]);
     };
 
-    const saveClientData = (data) => {
-        let clients = JSON.parse(localStorage.getItem('clients')) || [];
-        if (editIndex !== null) {
-            clients[editIndex] = data; // Actualiza cliente existente
-        } else {
-            clients.push(data); // Agrega nuevo cliente
+    // Función para guardar datos del cliente
+    const saveClientData = async (data) => {
+        try {
+            const response = await fetch('http://localhost:3000/clients', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+                throw new Error('Error al guardar los datos del cliente');
+            }
+            alert('Cliente guardado con éxito');
+            updateClientList();
+        } catch (error) {
+            console.error(error);
+            alert('No se pudo guardar el cliente');
         }
-        localStorage.setItem('clients', JSON.stringify(clients)); // Guarda en localStorage
-        editIndex = null; // Resetea índice de edición
-        updateClientList();
+    };
+
+    // Función para actualizar la lista de clientes
+    const updateClientList = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/clients');
+            const clientsData = await response.json();
+            clients = clientsData; // Actualiza el array de clientes
+            clientList.innerHTML = '';
+            clients.forEach((client, index) => {
+                const clientDiv = document.createElement('div');
+                clientDiv.classList.add('client');
+                clientDiv.innerHTML = `
+                    <p><strong>${client.name}</strong></p>
+                    <p>Documento: ${client.docNumber}</p>
+                    <p>Plan: ${client.plan}</p>
+                    <p>Hora de Liberación: ${client.releaseTime}</p>
+                    <button class="whatsapp" onclick="sendWhatsapp('${client.phone}')">WhatsApp</button>
+                    <button class="secondary" onclick="editClient(${index})">Editar</button>
+                    ${currentUser === 'Jason2311' ? `<button class="danger" onclick="deleteClient(${index})">Eliminar</button>` : ''}
+                    <button class="info" onclick="viewDetails(${index})">Ver Detalle</button>
+                `;
+                clientList.appendChild(clientDiv);
+            });
+        } catch (error) {
+            console.error(error);
+            alert('No se pudo actualizar la lista de clientes');
+        }
     };
 
     const calculateReleaseTime = (crmStatusTime) => {
         const crmDate = new Date(crmStatusTime);
         crmDate.setHours(crmDate.getHours() + 72);
         return crmDate.toISOString().slice(0, 16);
-    };
-
-    const updateClientList = () => {
-        clientList.innerHTML = '';
-        clients.forEach((client, index) => {
-            const clientDiv = document.createElement('div');
-            clientDiv.classList.add('client');
-            clientDiv.innerHTML = `
-                <p><strong>${client.name}</strong></p>
-                <p>Documento: ${client.docNumber}</p>
-                <p>Plan: ${client.plan}</p>
-                <p>Hora de Liberación: ${client.releaseTime}</p>
-                <button class="whatsapp" onclick="sendWhatsapp('${client.phone}')">WhatsApp</button>
-                <button class="secondary" onclick="editClient(${index})">Editar</button>
-                ${currentUser === 'Jason2311' ? `<button class="danger" onclick="deleteClient(${index})">Eliminar</button>` : ''}
-                <button class="info" onclick="viewDetails(${index})">Ver Detalle</button>
-            `;
-            clientList.appendChild(clientDiv);
-        });
     };
 
     window.sendWhatsapp = (phone) => {
@@ -131,11 +149,20 @@ document.addEventListener('DOMContentLoaded', () => {
         showSection(enterClientSection);
     };
 
-    window.deleteClient = (index) => {
-        clients = JSON.parse(localStorage.getItem('clients')) || [];
-        clients.splice(index, 1);
-        localStorage.setItem('clients', JSON.stringify(clients)); // Guarda los datos actualizados en localStorage
-        updateClientList();
+    window.deleteClient = async (index) => {
+        try {
+            const response = await fetch(`http://localhost:3000/clients/${clients[index].id}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok) {
+                throw new Error('Error al eliminar el cliente');
+            }
+            alert('Cliente eliminado con éxito');
+            updateClientList();
+        } catch (error) {
+            console.error(error);
+            alert('No se pudo eliminar el cliente');
+        }
     };
 
     // Eventos
@@ -154,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    clientForm.addEventListener('submit', (e) => {
+    clientForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('name').value;
         const docType = document.getElementById('doc-type').value;
@@ -175,19 +202,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const clientData = { name, docType, docNumber, address, district, phone, email, plan, crmStatus, releaseTime, observations, orderStatus };
-        saveClientData(clientData);
+        await saveClientData(clientData);
         hideSection(enterClientSection);
-        showSection(viewScheduledSection);
-    });
-
-    btnEnterClient.addEventListener('click', () => {
-        hideSection(viewScheduledSection);
-        showSection(enterClientSection);
-    });
-
-    btnViewScheduled.addEventListener('click', () => {
-        hideSection(controlPanel);
-        showSection(viewScheduledSection);
     });
 
     btnBack.addEventListener('click', () => {
@@ -202,6 +218,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnBackDetail.addEventListener('click', () => {
         hideSection(clientDetailSection);
+        showSection(viewScheduledSection);
+    });
+
+    btnEnterClient.addEventListener('click', () => {
+        hideSection(viewScheduledSection);
+        showSection(enterClientSection);
+    });
+
+    btnViewScheduled.addEventListener('click', () => {
+        hideSection(controlPanel);
         showSection(viewScheduledSection);
     });
 
